@@ -1,0 +1,153 @@
+[{
+    "role":"UI Designer",
+    "location":"Pune, india",
+    "work":"On-site",
+    "time":"Fulltime",
+    "menu":[
+      {
+        "name":"Responsibilities",
+        "list":[
+            "User Interface Design",
+            "WireFraming and prototying",
+            "User Centered Design",
+            "User Interface Design",
+            "WireFraming and prototying",
+            "User Centered Design"
+          ]
+      },{
+        "name":"Qualification",
+        "list":
+            [
+                "Competative Salary And Benefits Packages",
+                "Benefits Packages",
+                "Salary And Benefits Packages",
+                "Packags Salary And Benefits Packages"            
+        ]
+      },
+      {
+        "name":"Benefits",
+        "list":[
+            "Competative Salary And Benefits Packages",
+            "Packages Benefits Packages",
+            "Benefits Packages",
+            "Benefits Packages Competative Salary And"            
+    ]
+      }
+    ],
+    "salary":4.5
+},
+{
+  "role":"UX Designer",
+  "location":"Surat, india",
+  "work":"Remote",
+  "time":"Part-time",
+  "menu":[
+    {
+      "name":"Responsibilities",
+      "list":[
+          "User Interface Design",
+          "WireFraming and prototying",
+          "User Centered Design",
+          "User Interface Design",
+          "WireFraming and prototying",
+          "User Centered Design"
+        ]
+    },{
+      "name":"Qualification",
+      "list":
+          [
+              "Competative Salary And Benefits Packages",
+              "Competative Salary And Benefits Packages Benefits Packages",
+              "Competative Salary And Benefits Packages",
+              "Competative Salary And Benefits Packages"            
+      ]
+    },
+    {
+      "name":"Benefits",
+      "list":[
+          "Competative Salary And Benefits Packages",
+          "Competative Salary And Benefits Packages Benefits Packages",
+          "Competative Salary And Benefits Packages",
+          "Competative Salary And Benefits Packages"            
+  ]
+    }
+  ],
+  "salary":6.5},
+
+  {
+    "role": "Interaction Designer",
+    "location":"Chennai, india",
+    "work":"On-site",
+    "time":"Fulltime",
+    "menu":[
+      {
+        "name":"Responsibilities",
+        "list":[
+            "User Interface Design",
+            "WireFraming and prototying",
+            "User Centered Design",
+            "User Interface Design",
+            "WireFraming and prototying",
+            "User Centered Design"
+          ]
+      },{
+        "name":"Qualification",
+        "list":
+            [
+                "Competative Salary And Benefits Packages",
+                "Competative Salary And Benefits Packages Benefits Packages",
+                "Competative Salary And Benefits Packages",
+                "Competative Salary And Benefits Packages"            
+        ]
+      },
+      {
+        "name":"Benefits",
+        "list":[
+            "Competative Salary And Benefits Packages",
+            "Competative Salary And Benefits Packages Benefits Packages",
+            "Competative Salary And Benefits Packages",
+            "Competative Salary And Benefits Packages"            
+    ]
+      }
+    ],
+    "salary":4.5},
+    {
+      "role":"Graphic Designer",
+      "location":"Noida india",
+      "work":"Remote",
+      "time":"Part-time",
+      "menu":[
+        {
+          "name":"Responsibilities",
+          "list":[
+              "User Interface Design",
+              "WireFraming and prototying",
+              "User Centered Design",
+              "User Interface Design",
+              "WireFraming and prototying",
+              "User Centered Design"
+            ]
+        },{
+          "name":"Qualification",
+          "list":
+              [
+                  "Competative Salary And Benefits Packages",
+                  "Competative Salary And Benefits Packages Benefits Packages",
+                  "Competative Salary And Benefits Packages",
+                  "Competative Salary And Benefits Packages"            
+          ]
+        },
+        {
+          "name":"Benefits",
+          "list":[
+              "Competative Salary And Benefits Packages",
+              "Competative Salary And Benefits Packages Benefits Packages",
+              "Competative Salary And Benefits Packages",
+              "Competative Salary And Benefits Packages"            
+      ]
+        }
+      ],
+      "salary":7.5}
+    
+
+]
