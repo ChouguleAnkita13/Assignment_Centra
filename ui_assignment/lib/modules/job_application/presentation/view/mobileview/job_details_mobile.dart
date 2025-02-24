@@ -18,7 +18,8 @@ class JobDetailsMobile extends StatelessWidget {
     return Scaffold(
       backgroundColor: Color.fromRGBO(255, 255, 255, 1),
       appBar: AppBar(
-        leading: Icon(Icons.arrow_back_ios),
+        leading:
+            GestureDetector(onTap: () {}, child: Icon(Icons.arrow_back_ios)),
         backgroundColor: Color.fromRGBO(255, 255, 255, 1),
         surfaceTintColor: Color.fromRGBO(255, 255, 255, 1),
         centerTitle: true,
