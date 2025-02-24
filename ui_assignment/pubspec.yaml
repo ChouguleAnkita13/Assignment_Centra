@@ -13,6 +13,9 @@ dependencies:
   flutter_bloc: ^9.0.0
   google_fonts: ^6.2.1
   dropdown_button2: ^2.3.9
+  percent_indicator: ^4.2.4
+  dotted_border: ^2.1.0
+  go_router: ^14.8.0
 
 dev_dependencies:
   flutter_test:
