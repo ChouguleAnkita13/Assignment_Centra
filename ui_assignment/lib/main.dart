@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:ui_assignment/modules/job_details/presentation/pages/job_details_page.dart';
+import 'package:ui_assignment/modules/job_application/presentation/view/route.dart';
 
 void main() {
   runApp(const MainApp());
@@ -10,7 +10,9 @@ class MainApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const MaterialApp(
-        debugShowCheckedModeBanner: false, home: JobDetailsPage());
+    return MaterialApp.router(
+      debugShowCheckedModeBanner: false,
+      routerConfig: routerConfig,
+    );
   }
 }
