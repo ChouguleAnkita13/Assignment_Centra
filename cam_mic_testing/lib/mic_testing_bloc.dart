@@ -176,10 +176,12 @@ class MicrophoneTestBloc
 
       _recorder!.onProgress!.listen((event) {
         /// If decibel data is available, update `currentDecibels`.
+
         if (event.decibels != null) {
           currentDecibels = event.decibels!;
 
           /// Ensure `emit` is still valid before updating state.
+
           if (!emit.isDone) {
             emit(MicrophoneTestRecordingState(
               currentDecibels: currentDecibels,
@@ -195,7 +197,7 @@ class MicrophoneTestBloc
       /// Ensure `emit` is still active before sending the final state.
 
       if (!emit.isDone) {
-        if (currentDecibels <= 50.0) {
+        if (currentDecibels <= 10.0) {
           emit(MicrophoneTestFailureState(
               statusMessage: 'Microphone Test Failed: No sound detected.'));
         } else {
@@ -226,7 +228,7 @@ class MicrophoneTestBloc
       /// Ensure `emit` is still active before updating state.
       if (!emit.isDone) {
         /// If the decibel level was sufficient, test is successful.
-        if (currentDecibels > 50.0) {
+        if (currentDecibels > 10.0) {
           emit(MicrophoneTestSuccessState(statusMessage: 'Test Successful!'));
         } else {
           emit(MicrophoneTestFailureState(

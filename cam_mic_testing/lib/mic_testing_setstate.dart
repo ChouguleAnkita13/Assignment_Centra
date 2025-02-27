@@ -14,19 +14,19 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      home: MicrophoneTestPage(),
+      // home: MicrophoneTestPage(),
     );
   }
 }
 
-class MicrophoneTestPage extends StatefulWidget {
-  const MicrophoneTestPage({super.key});
+class MicrophoneTestPages extends StatefulWidget {
+  const MicrophoneTestPages({super.key});
 
   @override
-  State<MicrophoneTestPage> createState() => _MicrophoneTestPageState();
+  State<MicrophoneTestPages> createState() => _MicrophoneTestPagesState();
 }
 
-class _MicrophoneTestPageState extends State<MicrophoneTestPage> {
+class _MicrophoneTestPagesState extends State<MicrophoneTestPages> {
   FlutterSoundRecorder? _recorder;
   bool _isRecording = false;
   double currentDecibels = 0.0;
