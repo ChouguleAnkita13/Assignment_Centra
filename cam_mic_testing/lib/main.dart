@@ -4,10 +4,12 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_sound/flutter_sound.dart';
 import 'package:permission_handler/permission_handler.dart';
 
+/// Entry point of the application
 void main() {
   runApp(MyApp());
 }
 
+/// The main application widget
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
@@ -15,7 +17,10 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
+
+      /// Disables the debug banner
       home: BlocProvider(
+        /// Provides the MicrophoneTestBloc to the widget tree
         create: (_) => MicrophoneTestBloc(),
         child: MicrophoneTestPage(),
       ),
@@ -23,6 +28,7 @@ class MyApp extends StatelessWidget {
   }
 }
 
+/// The UI page for testing the microphone
 class MicrophoneTestPage extends StatelessWidget {
   const MicrophoneTestPage({super.key});
 
@@ -30,12 +36,16 @@ class MicrophoneTestPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: Text("Microphone Test")),
+
+      /// Sets the app bar title
       body: BlocBuilder<MicrophoneTestBloc, MicrophoneTestState>(
+        /// Rebuilds UI based on state changes from the BLoC
         builder: (context, state) {
           String statusMessage = '';
           double currentDecibels = 0.0;
           bool testFailed = false;
 
+          /// Determine the UI message and decibels based on the current state
           if (state is MicrophoneTestRecordingState) {
             currentDecibels = state.currentDecibels;
             statusMessage = state.statusMessage;
@@ -49,12 +59,14 @@ class MicrophoneTestPage extends StatelessWidget {
           return Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
+              /// Displays the current decibel level
               Text(
                 "Current Decibels: ${currentDecibels.toStringAsFixed(2)} dB",
                 style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
               ),
               SizedBox(height: 20),
-              // LinearProgressIndicator showing the waveform
+
+              /// Progress bar representing the microphone input level
               SizedBox(
                 width: 300,
                 child: LinearProgressIndicator(
@@ -66,6 +78,8 @@ class MicrophoneTestPage extends StatelessWidget {
                 ),
               ),
               SizedBox(height: 20),
+
+              /// Start/Stop button for recording
               ElevatedButton(
                 onPressed: () {
                   if (state is MicrophoneTestRecordingState) {
@@ -79,10 +93,11 @@ class MicrophoneTestPage extends StatelessWidget {
                   }
                 },
                 child: Text(
-                  state is MicrophoneTestRecordingState ? "Stop" : "Start",
-                ),
+                    state is MicrophoneTestRecordingState ? "Stop" : "Start"),
               ),
               SizedBox(height: 20),
+
+              /// Displays the test result message
               Text(
                 statusMessage,
                 style: TextStyle(
@@ -98,112 +113,180 @@ class MicrophoneTestPage extends StatelessWidget {
   }
 }
 
-// Events
-abstract class MicrophoneTestEvent {}
-
-class StartRecordingEvent extends MicrophoneTestEvent {}
-
-class StopRecordingEvent extends MicrophoneTestEvent {}
-
-// States
-abstract class MicrophoneTestState {}
-
-class MicrophoneTestInitialState extends MicrophoneTestState {}
-
-class MicrophoneTestRecordingState extends MicrophoneTestState {
-  final double currentDecibels;
-  final String statusMessage;
-
-  MicrophoneTestRecordingState({
-    required this.currentDecibels,
-    required this.statusMessage,
-  });
-}
-
-class MicrophoneTestSuccessState extends MicrophoneTestState {
-  final String statusMessage;
-
-  MicrophoneTestSuccessState({required this.statusMessage});
-}
-
-class MicrophoneTestFailureState extends MicrophoneTestState {
-  final String statusMessage;
-
-  MicrophoneTestFailureState({required this.statusMessage});
-}
-
-// BLoC
 class MicrophoneTestBloc
     extends Bloc<MicrophoneTestEvent, MicrophoneTestState> {
+  /// FlutterSoundRecorder instance to handle audio recording.
+
   FlutterSoundRecorder? _recorder;
+
+  /// Stores the current decibel level.
+
   double currentDecibels = 0.0;
 
   MicrophoneTestBloc() : super(MicrophoneTestInitialState()) {
+    /// Listens for StartRecordingEvent and calls `_startRecording`.
+
     on<StartRecordingEvent>(_startRecording);
+
+    /// Listens for StopRecordingEvent and calls `_stopRecording`.
+
     on<StopRecordingEvent>(_stopRecording);
   }
+
+  /// Starts recording and updates decibel levels.
 
   Future<void> _startRecording(
       StartRecordingEvent event, Emitter<MicrophoneTestState> emit) async {
     try {
-      // Request microphone permission
+      /// Request microphone permission from the user.
       var status = await Permission.microphone.request();
 
+      /// If permission is denied, emit a failure state and return.
       if (status != PermissionStatus.granted) {
         emit(MicrophoneTestFailureState(
             statusMessage: 'Microphone permission denied. No sound detected.'));
         return;
       }
 
+      /// Initialize the recorder.
       _recorder = FlutterSoundRecorder();
       await _recorder!.openRecorder();
+
+      /// Emit state indicating that recording has started.
 
       emit(MicrophoneTestRecordingState(
         currentDecibels: 0.0,
         statusMessage: 'Recording...',
       ));
 
+      /// Start recording to a temporary file in AAC format.
+
       await _recorder!.startRecorder(
         toFile: 'test.aac',
         codec: Codec.aacMP4,
       );
 
+      /// Set the duration for microphone input updates.
+
       await _recorder!.setSubscriptionDuration(Duration(milliseconds: 100));
 
+      /// Listen for audio level updates.
+
       _recorder!.onProgress!.listen((event) {
+        /// If decibel data is available, update `currentDecibels`.
+
         if (event.decibels != null) {
           currentDecibels = event.decibels!;
-          emit(MicrophoneTestRecordingState(
-            currentDecibels: currentDecibels,
-            statusMessage: 'Recording...',
-          ));
+
+          /// Ensure `emit` is still valid before updating state.
+
+          if (!emit.isDone) {
+            emit(MicrophoneTestRecordingState(
+              currentDecibels: currentDecibels,
+              statusMessage: 'Recording...',
+            ));
+          }
         }
       });
 
-      // Check for microphone input after 5 seconds
+      // Wait for 5 seconds to analyze microphone input
       await Future.delayed(Duration(seconds: 5));
 
-      if (currentDecibels <= 10.0) {
-        emit(MicrophoneTestFailureState(
-            statusMessage: 'Microphone Test Failed: No sound detected.'));
-      } else {
-        emit(MicrophoneTestSuccessState(statusMessage: 'Test Successful!'));
+      /// Ensure `emit` is still active before sending the final state.
+
+      if (!emit.isDone) {
+        if (currentDecibels <= 10.0) {
+          emit(MicrophoneTestFailureState(
+              statusMessage: 'Microphone Test Failed: No sound detected.'));
+        } else {
+          emit(MicrophoneTestSuccessState(statusMessage: 'Test Successful!'));
+        }
       }
     } catch (e) {
-      emit(MicrophoneTestFailureState(statusMessage: 'Error: $e'));
+      /// Catch any errors and emit a failure state.
+
+      if (!emit.isDone) {
+        emit(MicrophoneTestFailureState(statusMessage: 'Error: $e'));
+      }
     }
   }
+
+  /// Stops recording and determines if the test was successful.
 
   Future<void> _stopRecording(
       StopRecordingEvent event, Emitter<MicrophoneTestState> emit) async {
-    await _recorder!.stopRecorder();
-    _recorder!.closeRecorder();
+    try {
+      /// Stop and close the recorder safely.
 
-    if (currentDecibels > 10.0) {
-      emit(MicrophoneTestSuccessState(statusMessage: 'Test Successful!'));
-    } else {
-      emit(MicrophoneTestFailureState(
-          statusMessage: 'Microphone Test Failed: No sound detected.'));
+      if (_recorder != null) {
+        await _recorder!.stopRecorder();
+        await _recorder!.closeRecorder();
+      }
+
+      /// Ensure `emit` is still active before updating state.
+      if (!emit.isDone) {
+        /// If the decibel level was sufficient, test is successful.
+        if (currentDecibels > 10.0) {
+          emit(MicrophoneTestSuccessState(statusMessage: 'Test Successful!'));
+        } else {
+          emit(MicrophoneTestFailureState(
+              statusMessage: 'Microphone Test Failed: No sound detected.'));
+        }
+      }
+    } catch (e) {
+      /// Catch any errors and emit a failure state.
+
+      if (!emit.isDone) {
+        emit(MicrophoneTestFailureState(statusMessage: 'Error: $e'));
+      }
     }
   }
+}
+
+/// Abstract base class for microphone test events.
+abstract class MicrophoneTestEvent {}
+
+/// Event to start the microphone recording.
+class StartRecordingEvent extends MicrophoneTestEvent {}
+
+/// Event to stop the microphone recording.
+class StopRecordingEvent extends MicrophoneTestEvent {}
+
+/// Abstract base class for microphone test states.
+abstract class MicrophoneTestState {}
+
+/// Initial state before any action is taken.
+class MicrophoneTestInitialState extends MicrophoneTestState {}
+
+/// State indicating that recording is in progress.
+class MicrophoneTestRecordingState extends MicrophoneTestState {
+  /// Current decibel level.
+  final double currentDecibels;
+
+  /// Status message for UI updates.
+  final String statusMessage;
+
+  /// Constructor to initialize state with decibel level and message.
+  MicrophoneTestRecordingState({
+    required this.currentDecibels,
+    required this.statusMessage,
+  });
+}
+
+/// State indicating that the microphone test was successful.
+class MicrophoneTestSuccessState extends MicrophoneTestState {
+  /// Status message to display success.
+  final String statusMessage;
+
+  /// Constructor to initialize state with success message.
+  MicrophoneTestSuccessState({required this.statusMessage});
+}
+
+/// State indicating that the microphone test failed.
+class MicrophoneTestFailureState extends MicrophoneTestState {
+  /// Status message to display failure.
+  final String statusMessage;
+
+  /// Constructor to initialize state with failure message.
+  MicrophoneTestFailureState({required this.statusMessage});
 }
