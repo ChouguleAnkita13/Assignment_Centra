@@ -190,10 +190,10 @@ class MicrophoneTestBloc
         }
       });
 
-      await Future.delayed(Duration(seconds: 20));
+      await Future.delayed(Duration(seconds: 10));
 
       if (!emit.isDone) {
-        if (recognizedWords.split(' ').length > 5) {
+        if (recognizedWords.split(' ').length > 1) {
           emit(MicrophoneTestSuccessState(
               statusMessage: 'Test Successful!',
               recognizedWords: recognizedWords));
@@ -221,7 +221,7 @@ class MicrophoneTestBloc
       _speechToText.stop();
 
       if (!emit.isDone) {
-        if (recognizedWords.split(' ').length > 5) {
+        if (recognizedWords.split(' ').length > 1) {
           emit(MicrophoneTestSuccessState(
               statusMessage: 'Test Successful!',
               recognizedWords: recognizedWords));
