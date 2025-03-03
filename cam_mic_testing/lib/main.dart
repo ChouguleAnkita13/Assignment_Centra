@@ -130,6 +130,12 @@ class MicrophoneTestBloc
         return;
       }
 
+      // ✅ Proper disposal before re-initializing
+      if (_recorder != null) {
+        await _recorder!.closeRecorder();
+        _recorder = null;
+      }
+
       _recorder = FlutterSoundRecorder();
       await _recorder!.openRecorder();
 
@@ -216,6 +222,7 @@ class MicrophoneTestBloc
       if (_recorder != null) {
         await _recorder!.stopRecorder();
         await _recorder!.closeRecorder();
+        _recorder = null; // ✅ Dispose after stopping
       }
 
       _speechToText.stop();
