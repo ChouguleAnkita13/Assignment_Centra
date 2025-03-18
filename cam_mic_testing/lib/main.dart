@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:flutter_sound/flutter_sound.dart';
+// import 'package:flutter_sound/flutter_sound.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:speech_to_text/speech_to_text.dart' as stt;
 
@@ -34,12 +34,10 @@ class MicrophoneTestPage extends StatelessWidget {
       body: BlocBuilder<MicrophoneTestBloc, MicrophoneTestState>(
         builder: (context, state) {
           String statusMessage = '';
-          double currentDecibels = 0.0;
           bool testFailed = false;
           String recognizedWords = '';
 
           if (state is MicrophoneTestRecordingState) {
-            currentDecibels = state.currentDecibels;
             statusMessage = state.statusMessage;
             recognizedWords = state.recognizedWords;
           } else if (state is MicrophoneTestSuccessState) {
@@ -56,14 +54,14 @@ class MicrophoneTestPage extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Text(
-                  "Current Decibels: ${currentDecibels.toStringAsFixed(2)} dB",
+                  "Current Decibels:B",
                   style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                 ),
                 SizedBox(height: 20),
                 SizedBox(
                   width: 300,
                   child: LinearProgressIndicator(
-                    value: currentDecibels > 0 ? currentDecibels / 100 : 0,
+                    value: 0,
                     backgroundColor: Colors.grey[300],
                     valueColor: AlwaysStoppedAnimation<Color>(Colors.blue),
                     minHeight: 10,
@@ -110,9 +108,7 @@ class MicrophoneTestPage extends StatelessWidget {
 
 class MicrophoneTestBloc
     extends Bloc<MicrophoneTestEvent, MicrophoneTestState> {
-  FlutterSoundRecorder? _recorder;
   final stt.SpeechToText _speechToText = stt.SpeechToText();
-  double currentDecibels = 0.0;
   String recognizedWords = '';
 
   MicrophoneTestBloc() : super(MicrophoneTestInitialState()) {
@@ -130,15 +126,6 @@ class MicrophoneTestBloc
         return;
       }
 
-      // ✅ Proper disposal before re-initializing
-      if (_recorder != null) {
-        await _recorder!.closeRecorder();
-        _recorder = null;
-      }
-
-      _recorder = FlutterSoundRecorder();
-      await _recorder!.openRecorder();
-
       bool available = await _speechToText.initialize();
       if (!available) {
         emit(MicrophoneTestFailureState(
@@ -152,34 +139,12 @@ class MicrophoneTestBloc
       }
 
       // ✅ Reset values on new start
-      currentDecibels = 0.0;
       recognizedWords = '';
 
       emit(MicrophoneTestRecordingState(
-        currentDecibels: currentDecibels,
         statusMessage: 'Recording...',
         recognizedWords: recognizedWords,
       ));
-
-      await _recorder!.startRecorder(
-        toFile: 'test.aac',
-        codec: Codec.aacMP4,
-      );
-
-      await _recorder!.setSubscriptionDuration(Duration(milliseconds: 100));
-
-      _recorder!.onProgress!.listen((event) {
-        if (event.decibels != null) {
-          currentDecibels = event.decibels!;
-          if (!emit.isDone) {
-            emit(MicrophoneTestRecordingState(
-              currentDecibels: currentDecibels,
-              statusMessage: 'Recording...',
-              recognizedWords: recognizedWords,
-            ));
-          }
-        }
-      });
 
       // ✅ Start speech recognition after stopping any previous session
       await Future.delayed(
@@ -189,7 +154,6 @@ class MicrophoneTestBloc
         recognizedWords = result.recognizedWords;
         if (!emit.isDone) {
           emit(MicrophoneTestRecordingState(
-            currentDecibels: currentDecibels,
             statusMessage: 'Recording...',
             recognizedWords: recognizedWords,
           ));
@@ -219,12 +183,6 @@ class MicrophoneTestBloc
   Future<void> _stopRecording(
       StopRecordingEvent event, Emitter<MicrophoneTestState> emit) async {
     try {
-      if (_recorder != null) {
-        await _recorder!.stopRecorder();
-        await _recorder!.closeRecorder();
-        _recorder = null; // ✅ Dispose after stopping
-      }
-
       _speechToText.stop();
 
       if (!emit.isDone) {
@@ -259,12 +217,10 @@ abstract class MicrophoneTestState {}
 class MicrophoneTestInitialState extends MicrophoneTestState {}
 
 class MicrophoneTestRecordingState extends MicrophoneTestState {
-  final double currentDecibels;
   final String statusMessage;
   final String recognizedWords;
 
   MicrophoneTestRecordingState({
-    required this.currentDecibels,
     required this.statusMessage,
     required this.recognizedWords,
   });

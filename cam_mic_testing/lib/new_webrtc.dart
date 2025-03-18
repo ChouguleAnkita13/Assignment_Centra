@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:flutter_sound/flutter_sound.dart';
+import 'package:flutter_webrtc/flutter_webrtc.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:speech_to_text/speech_to_text.dart' as stt;
 
@@ -110,8 +110,8 @@ class MicrophoneTestPage extends StatelessWidget {
 
 class MicrophoneTestBloc
     extends Bloc<MicrophoneTestEvent, MicrophoneTestState> {
-  FlutterSoundRecorder? _recorder;
   final stt.SpeechToText _speechToText = stt.SpeechToText();
+  MediaStream? _localStream;
   double currentDecibels = 0.0;
   String recognizedWords = '';
 
@@ -130,9 +130,6 @@ class MicrophoneTestBloc
         return;
       }
 
-      _recorder = FlutterSoundRecorder();
-      await _recorder!.openRecorder();
-
       bool available = await _speechToText.initialize();
       if (!available) {
         emit(MicrophoneTestFailureState(
@@ -140,101 +137,61 @@ class MicrophoneTestBloc
         return;
       }
 
-      // ✅ Stop any previous speech recognition session
       if (_speechToText.isListening) {
         await _speechToText.stop();
       }
 
-      // ✅ Reset values on new start
       currentDecibels = 0.0;
       recognizedWords = '';
-
       emit(MicrophoneTestRecordingState(
-        currentDecibels: currentDecibels,
-        statusMessage: 'Recording...',
-        recognizedWords: recognizedWords,
-      ));
+          currentDecibels: currentDecibels,
+          statusMessage: 'Recording...',
+          recognizedWords: recognizedWords));
 
-      await _recorder!.startRecorder(
-        toFile: 'test.aac',
-        codec: Codec.aacMP4,
-      );
-
-      await _recorder!.setSubscriptionDuration(Duration(milliseconds: 100));
-
-      _recorder!.onProgress!.listen((event) {
-        if (event.decibels != null) {
-          currentDecibels = event.decibels!;
-          if (!emit.isDone) {
-            emit(MicrophoneTestRecordingState(
-              currentDecibels: currentDecibels,
-              statusMessage: 'Recording...',
-              recognizedWords: recognizedWords,
-            ));
-          }
-        }
-      });
-
-      // ✅ Start speech recognition after stopping any previous session
-      await Future.delayed(
-          Duration(milliseconds: 500)); // Small delay to avoid conflicts
+      _localStream = await navigator.mediaDevices.getUserMedia({'audio': true});
 
       _speechToText.listen(onResult: (result) {
         recognizedWords = result.recognizedWords;
-        if (!emit.isDone) {
-          emit(MicrophoneTestRecordingState(
+        emit(MicrophoneTestRecordingState(
             currentDecibels: currentDecibels,
             statusMessage: 'Recording...',
-            recognizedWords: recognizedWords,
-          ));
-        }
+            recognizedWords: recognizedWords));
       });
 
-      await Future.delayed(Duration(seconds: 10));
+      await Future.delayed(Duration(seconds: 20));
 
-      if (!emit.isDone) {
-        if (recognizedWords.split(' ').length > 1) {
-          emit(MicrophoneTestSuccessState(
-              statusMessage: 'Test Successful!',
-              recognizedWords: recognizedWords));
-        } else {
-          emit(MicrophoneTestFailureState(
-              statusMessage:
-                  'Microphone Test Failed: Insufficient words recognized.'));
-        }
+      if (recognizedWords.split(' ').length > 5) {
+        emit(MicrophoneTestSuccessState(
+            statusMessage: 'Test Successful!',
+            recognizedWords: recognizedWords));
+      } else {
+        emit(MicrophoneTestFailureState(
+            statusMessage:
+                'Microphone Test Failed: Insufficient words recognized.'));
       }
     } catch (e) {
-      if (!emit.isDone) {
-        emit(MicrophoneTestFailureState(statusMessage: 'Error: $e'));
-      }
+      emit(MicrophoneTestFailureState(statusMessage: 'Error: $e'));
     }
   }
 
   Future<void> _stopRecording(
       StopRecordingEvent event, Emitter<MicrophoneTestState> emit) async {
     try {
-      if (_recorder != null) {
-        await _recorder!.stopRecorder();
-        await _recorder!.closeRecorder();
-      }
-
+      _localStream?.getTracks().forEach((track) => track.stop());
+      _localStream = null;
       _speechToText.stop();
 
-      if (!emit.isDone) {
-        if (recognizedWords.split(' ').length > 1) {
-          emit(MicrophoneTestSuccessState(
-              statusMessage: 'Test Successful!',
-              recognizedWords: recognizedWords));
-        } else {
-          emit(MicrophoneTestFailureState(
-              statusMessage:
-                  'Microphone Test Failed: Insufficient words recognized.'));
-        }
+      if (recognizedWords.split(' ').length > 5) {
+        emit(MicrophoneTestSuccessState(
+            statusMessage: 'Test Successful!',
+            recognizedWords: recognizedWords));
+      } else {
+        emit(MicrophoneTestFailureState(
+            statusMessage:
+                'Microphone Test Failed: Insufficient words recognized.'));
       }
     } catch (e) {
-      if (!emit.isDone) {
-        emit(MicrophoneTestFailureState(statusMessage: 'Error: $e'));
-      }
+      emit(MicrophoneTestFailureState(statusMessage: 'Error: $e'));
     }
   }
 }
@@ -255,26 +212,20 @@ class MicrophoneTestRecordingState extends MicrophoneTestState {
   final double currentDecibels;
   final String statusMessage;
   final String recognizedWords;
-
-  MicrophoneTestRecordingState({
-    required this.currentDecibels,
-    required this.statusMessage,
-    required this.recognizedWords,
-  });
+  MicrophoneTestRecordingState(
+      {required this.currentDecibels,
+      required this.statusMessage,
+      required this.recognizedWords});
 }
 
 class MicrophoneTestSuccessState extends MicrophoneTestState {
   final String statusMessage;
   final String recognizedWords;
-
-  MicrophoneTestSuccessState({
-    required this.statusMessage,
-    required this.recognizedWords,
-  });
+  MicrophoneTestSuccessState(
+      {required this.statusMessage, required this.recognizedWords});
 }
 
 class MicrophoneTestFailureState extends MicrophoneTestState {
   final String statusMessage;
-
   MicrophoneTestFailureState({required this.statusMessage});
 }
